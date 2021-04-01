@@ -5,6 +5,7 @@ from itertools import permutations
 from leduc.players.random_player import RandomPlayer
 from leduc.players.call_player import CallPlayer
 from leduc.players.raise_player import RaisePlayer
+from leduc.players.rule_player import RulePlayer
 
 import random
 import numpy as np
@@ -123,5 +124,5 @@ def play_multiple_games(players, num_games=10, seed=2):
     print(players)
 
 
-players = [RaisePlayer('A'), RaisePlayer('B'), RaisePlayer('C')]
+players = [RulePlayer('Rule A'), RulePlayer('Rule B'), RulePlayer('Rule C')]
 play_multiple_games(players, 10)
