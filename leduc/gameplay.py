@@ -36,7 +36,7 @@ def play_game(players):
         curr_player = state.players[state.turn]
         print('Current Player', curr_player.name)
         if not curr_player.folded:
-            action = curr_player.select_action(state.valid_actions(), state.get_current_state())
+            action = curr_player.select_action(state.valid_actions(curr_player), state.get_current_state())
             print('Action', action)
             state = state.take(action)
             for i, player in enumerate(state.players):
@@ -46,7 +46,8 @@ def play_game(players):
 
     payout = state.utility()
     print('*' * 30)
-    print('Payout', payout)
+    # print('Payout', payout)
+    print('Current Amounts', [p.amount for p in players])
     winners = np.argwhere(payout == np.amax(payout)).flatten().tolist()
     # winners
     # print(winners)
@@ -76,9 +77,13 @@ def play_multiple_rotations(players, num_rotations=None):
         num_rotations = len(players)
     for rotation in range(num_rotations):
         print('-------- Rotation', rotation, '--------')
+
         current_rot = rotate(players, rotation)
         print('Current in-game positions', current_rot, '\n')
-        winners = play_game(current_rot)
+        if all(x > 1 for x in [p.amount for p in current_rot]):
+            winners = play_game(current_rot)
+        else:
+            break
         # print('WINNERS', winners)
         for winner in winners:
             rotation_winners[winner] += 1
@@ -86,11 +91,20 @@ def play_multiple_rotations(players, num_rotations=None):
             player.bets = 1
             player.folded = False
             player.raised = False
-    print('Rotation Winners:', rotation_winners)
+    # print('Rotation Winners:', rotation_winners)
+    print(current_rot)
     return rotation_winners
 
 
-def play_multiple_games(players, num_games=10, seed=42):
+def play_multiple_games(players, num_games=10, seed=2):
+    """Play multiple games. For each game we shuffle the player order and then play multiple rotations
+    in a given order. Number of rotations is equal to the number of players. For instance, if 3 players are
+    to play multiple games, and the number of games is 10, then there will be a total of 3 * 10 hands played.
+    Attributes
+        players:    a list of players that are going to play the games
+        num_games:  int value denoting the total numbers of games to play
+        seed: random seed for reproducibility
+    """
     total_games_winners = {}
     for player in players:
         if player.name not in total_games_winners:
@@ -100,12 +114,14 @@ def play_multiple_games(players, num_games=10, seed=42):
         print('-------- Game', game, '--------')
         random.shuffle(players)
         print('Initial game positions: ', players, '\n')
-        rotation_winners = play_multiple_rotations(players)
+        if all(x > 1 for x in [p.amount for p in players]):
+            rotation_winners = play_multiple_rotations(players)
         for player_name in total_games_winners:
             total_games_winners[player_name] += rotation_winners[player_name]
         print()
-    print('Final Win Count: ', total_games_winners)
+    # print('Final Win Count: ', total_games_winners)
+    print(players)
 
 
-players = [RandomPlayer('Random'), RaisePlayer('Raise'), CallPlayer('Call')]
-play_multiple_games(players, 20)
+players = [RaisePlayer('A'), RaisePlayer('B'), RaisePlayer('C')]
+play_multiple_games(players, 10)

@@ -141,6 +141,10 @@ class State:
         for w in winners:
             payoffs[w] += payoff
 
+        # Keep track of amount with player
+        for idx, p in enumerate(self.players):
+            p.amount += payoffs[idx]
+
         return np.array(payoffs)
 
     def valid_actions(self):
@@ -171,20 +175,37 @@ class Leduc(State):
 
         return new_state
 
-    def valid_actions(self):
+    def valid_actions(self, curr_player):
+        # @TODO: What if the player has no money - then need to wait till end of round to see if they won anything.
+        # Right now the player is just folding if they don't have enough money.
         num_raises_so_far = sum([p.raised for p in self.players])
+        call_size = max(self.players).bets - curr_player.bets
 
         if num_raises_so_far == self.num_active_players:
-            return ['F', 'C']
+            if curr_player.amount - curr_player.bets >= call_size:
+                return ['F', 'C']
+            else:
+                return ['F']
         else:
             if self.round == 0:
-                return ['F', 'C', '2R']
+                if curr_player.amount - curr_player.bets - call_size >= 2:
+                    return ['F', 'C', '2R']
+                elif curr_player.amount - curr_player.bets >= call_size:
+                    return ['F', 'C']
+                else:
+                    return ['F']
             else:
-                return ['F', 'C', '4R']
+                if curr_player.amount - curr_player.bets - call_size >= 4:
+                    return ['F', 'C', '4R']
+                elif curr_player.amount - curr_player.bets >= call_size:
+                    return ['F', 'C']
+                else:
+                    return ['F']
 
     def get_current_state(self):
-        current_state = {'players':self.players,
-                         'history': self.history, 'hole_card': self.cards[self.turn],
+        current_state = {'players': self.players,
+                         'history': self.history,
+                         'hole_card': self.cards[self.turn],
                          'board_card': None if len(self.cards) <= self.num_players or self.round == 0 else
                          self.cards[self.num_players],
                          'round': 'pre_flop' if self.round == 0 else 'flop'}
