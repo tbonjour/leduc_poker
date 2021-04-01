@@ -175,13 +175,13 @@ class Leduc(State):
 
         return new_state
 
-    def valid_actions(self, curr_player):
+    def valid_actions(self, curr_player, num_raises_allowed=2):
         # @TODO: What if the player has no money - then need to wait till end of round to see if they won anything.
         # Right now the player is just folding if they don't have enough money.
         num_raises_so_far = sum([p.raised for p in self.players])
         call_size = max(self.players).bets - curr_player.bets
 
-        if num_raises_so_far == self.num_active_players:
+        if num_raises_so_far == num_raises_allowed:
             if curr_player.amount - curr_player.bets >= call_size:
                 return ['F', 'C']
             else:
